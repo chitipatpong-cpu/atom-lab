@@ -155,15 +155,14 @@ code{font-size:13px;background:rgba(255,255,255,.06);padding:2px 6px;border-radi
 .phscale{position:relative;height:14px;border-radius:7px;margin:8px 0;background:linear-gradient(90deg,#e33,#f80,#fd3,#7d4,#3c9,#39f,#63c)}
 .phscale i{position:absolute;top:-4px;width:4px;height:22px;background:#fff;border-radius:2px;transform:translateX(-50%)}
 
-@media (max-width:1100px){
-  header h1{display:none}
-}
 @media (max-width:900px){
   .el-detail,.sim,.learn{grid-template-columns:1fr}
   .toc{position:static;flex-direction:row;flex-wrap:wrap}
 }
-@media (max-width:700px){
+@media (max-width:1000px){
   body.doc-mode{height:100dvh;overflow:hidden}
+}
+@media (max-width:700px){
   .page.doc{padding:12px 16px 40px}
   .tools{grid-template-columns:1fr}
   .rx-list{grid-template-columns:1fr}
