@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atom Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="live-dot"></span>ATOM LAB <span class="brand-sub">VSEPR REALTIME CORE</span></div>
+  <nav id="nav">
+    <button data-page="lab" class="on">ห้องทดลอง</button>
+    <button data-page="table">ตารางธาตุ</button>
+    <button data-page="reactions">ปฏิกิริยาเคมี</button>
+    <button data-page="decay">การสลายตัวของธาตุ</button>
+    <button data-page="learn">ความรู้เคมี</button>
+    <button data-page="tools">เครื่องมือคำนวณ</button>
+  </nav>
+  <div class="spacer"></div>
+  <div class="statusline" id="statusline"></div>
+  <button class="counter" id="counter">ค้นพบ <b>0</b>/0</button>
+</header>
+
+<!-- ============ LAB ============ -->
+<main class="page on" id="page-lab">
+  <!-- element library -->
+  <section class="card" id="palette">
+    <div class="card-head"><h2><span class="ico">⠿</span> คลังธาตุ</h2><span class="tag mono">118 ธาตุ</span></div>
+    <div class="search"><span>⌕</span><input id="elSearch" type="search" placeholder="ค้นหา สัญลักษณ์, ชื่อ, เลขอะตอม…"></div>
+    <div class="seg" id="elTabs">
+      <button data-f="common" class="on">ใช้บ่อย</button><button data-f="all">ทั้งหมด 118</button><button data-f="group">ตามกลุ่ม</button>
+    </div>
+    <div class="cats" id="elCats"></div>
+    <div class="pal-hint"><span>☝ แตะ/ลากวางบนกระดาน</span><span class="mono">VALENCE SLOTS</span></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="smiles-box" id="smilesBox"></div>
+  </section>
+
+  <!-- builder -->
+  <div class="col mid">
+    <section class="card toolbar">
+      <div class="seg tools-seg">
+        <button class="on" id="mMove">✋ ต่อพันธะ</button>
+        <button id="mErase">✂ ตัดพันธะ</button>
+        <button id="mCharge" title="แตะอะตอมเพื่อกำหนดประจุ ใช้สร้างไอออน เช่น NH₄⁺, NO₃⁻">± ประจุ</button>
+      </div>
+      <button class="btn" id="bFill" title="เติมไฮโดรเจนให้อะตอมที่ยังมีพันธะว่าง">+H เติม H ออโต้</button>
+      <div class="combo" id="presetBox"><input id="presetInput" type="search" autocomplete="off" placeholder="⬡ ตัวอย่างสาร (196) — พิมพ์ค้นหา"><div class="combo-list" id="presetList"></div></div>
+      <button class="btn icon" id="bClear" title="ล้างกระดาน">🗑</button>
+    </section>
+
+    <section class="card stage-card" id="builder">
+      <div class="stage-bar">
+        <div class="sb-item"><span class="mut">กำลังประกอบ:</span> <b class="mono" id="stageFormula">—</b></div>
+        <div class="sb-item" id="stageStatus"></div>
+        <div class="sb-item mut small">⇄ แตะเส้นพันธะเพื่อเปลี่ยน เดี่ยว ⇄ คู่ ⇄ สาม</div>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="cv"></canvas>
+        <div class="hint" id="hint"><div><b>เริ่มจากลากธาตุมาวางตรงนี้</b>นำอะตอมไปชิดกันเพื่อสร้างพันธะ<br>จุดสีฟ้ารอบอะตอม = พันธะที่ยังว่างอยู่</div></div>
+        <div class="legend">แตะอะตอม = เลือก แล้วกด ✕ หรือปุ่ม Delete เพื่อลบ</div>
+      </div>
+    </section>
+
+    <section class="card react-card" id="rxReady"></section>
+  </div>
+
+  <!-- 3D + info -->
+  <div class="col right" id="viewer">
+    <section class="card view-card">
+      <div class="card-head"><h2><span class="ico">◈</span> มุมมอง 3D VSEPR</h2><span class="tag mono" id="vHybrid">—</span></div>
+      <div class="v3d" id="v3d">
+        <canvas id="c3d"></canvas>
+        <div class="labels" id="labels"></div>
+        <div class="vchip mono" id="vchip"></div>
+        <div class="vangle mono" id="vAngle"></div>
+        <div id="v3dmsg"></div>
+        <div class="tip" id="tip"></div>
+        <div class="vhint" id="vhint">ชี้หรือแตะอะตอม / พันธะเพื่อดูข้อมูล</div>
+      </div>
+      <div class="vtoggles">
+        <button class="vbtn on" id="tRot">⟳ หมุนอัตโนมัติ</button>
+        <button class="vbtn" id="tLP">◉ คู่อิเล็กตรอนโดดเดี่ยว</button>
+        <button class="vbtn" id="tDip">➤ แสดงขั้วสุทธิ (μ)</button>
+        <button class="vbtn" id="tReset">⟲ รีเซ็ตมุมมอง</button>
+      </div>
+    </section>
+    <section class="card side">
+      <div class="info" id="info"></div>
+      <details class="disc" id="disc">
+        <summary>สมุดสะสมสาร — <span id="discCount"></span></summary>
+        <div class="chips" id="chips"></div>
+      </details>
+    </section>
+  </div>
+</main>
+
+<!-- ============ PERIODIC TABLE ============ -->
+<section class="page doc" id="page-table">
+  <div class="doc-head">
+    <h2>ตารางธาตุ 118 ธาตุ</h2>
+    <div class="ctrls">
+      <input id="ptSearch" type="search" placeholder="ค้นหา เช่น Na, เหล็ก, 26">
+      <select id="ptMode">
+        <option value="cat">สีตามประเภทธาตุ</option>
+        <option value="state">สีตามสถานะที่ 25 °C</option>
+        <option value="block">สีตามบล็อก s p d f</option>
+        <option value="eneg">อิเล็กโทรเนกาติวิตี</option>
+        <option value="radius">รัศมีอะตอม</option>
+        <option value="ie">พลังงานไอออไนเซชันลำดับที่ 1</option>
+        <option value="density">ความหนาแน่น</option>
+        <option value="mp">จุดหลอมเหลว</option>
+      </select>
+    </div>
+  </div>
+  <div class="pt-wrap">
+    <div class="ptable" id="ptable"></div>
+  </div>
+  <div class="pt-legend" id="ptLegend"></div>
+  <div class="el-detail" id="elDetail"></div>
+  <p class="source">ที่มาของข้อมูล: <a href="https://pubchem.ncbi.nlm.nih.gov/periodic-table/" target="_blank" rel="noopener">PubChem Periodic Table</a> (NIH) · มวลอะตอมมาตรฐาน <a href="https://www.ciaaw.org/abridged-atomic-weights.htm" target="_blank" rel="noopener">CIAAW/IUPAC</a> · ชื่อภาษาไทยจาก Wikidata · รัศมีโคเวเลนต์จาก Cordero et al. (2008) · ดูรายการทั้งหมดในหน้า ความรู้เคมี → แหล่งอ้างอิงข้อมูล</p>
+</section>
+
+<!-- ============ REACTIONS ============ -->
+<section class="page doc" id="page-reactions">
+  <div class="doc-head">
+    <h2>ปฏิกิริยาเคมี</h2>
+    <div class="ctrls">
+      <input id="rxSearch" type="search" placeholder="ค้นหา เช่น น้ำ, CO2, การเผาไหม้">
+      <label class="chk"><input type="checkbox" id="rxLab"> เฉพาะที่ลองในห้องทดลองได้</label>
+      <span class="mut" id="rxCount"></span>
+    </div>
+  </div>
+  <div class="chipbar" id="rxTypes"></div>
+  <div class="rx-typeinfo" id="rxTypeInfo"></div>
+  <div class="rx-list" id="rxList"></div>
+</section>
+
+<!-- ============ DECAY ============ -->
+<section class="page doc" id="page-decay"></section>
+
+<!-- ============ LEARN ============ -->
+<section class="page doc" id="page-learn">
+  <div class="learn">
+    <nav class="toc" id="toc"></nav>
+    <article class="article" id="article"></article>
+  </div>
+</section>
+
+<!-- ============ TOOLS ============ -->
+<section class="page doc" id="page-tools"></section>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/elements.js"></script>
+<script src="js/data.js"></script>
+<script src="js/data/compounds/1-element.js"></script>
+<script src="js/data/compounds/2-hydride.js"></script>
+<script src="js/data/compounds/3-covalent.js"></script>
+<script src="js/data/compounds/4-oxide.js"></script>
+<script src="js/data/compounds/5-acid.js"></script>
+<script src="js/data/compounds/6-base.js"></script>
+<script src="js/data/compounds/7-salt.js"></script>
+<script src="js/data/compounds/8-organic.js"></script>
+<script src="js/data/compounds/9-ion.js"></script>
+<script src="js/data/reactions/01-synth.js"></script>
+<script src="js/data/reactions/02-decomp.js"></script>
+<script src="js/data/reactions/03-single.js"></script>
+<script src="js/data/reactions/04-double.js"></script>
+<script src="js/data/reactions/05-neutral.js"></script>
+<script src="js/data/reactions/06-carbonate.js"></script>
+<script src="js/data/reactions/07-combust.js"></script>
+<script src="js/data/reactions/08-redox.js"></script>
+<script src="js/data/reactions/09-organic.js"></script>
+<script src="js/data/reactions/10-bio.js"></script>
+<script src="js/data/reactions/11-ionic.js"></script>
+<script src="js/data/isotopes.js"></script>
+<script src="js/formula.js"></script>
+<script src="js/smiles.js"></script>
+<script src="js/compound-refs.js"></script>
+<script src="js/state.js"></script>
+<script src="js/chemistry.js"></script>
+<script src="js/builder.js"></script>
+<script src="js/viewer3d.js"></script>
+<script src="js/info.js"></script>
+<script src="js/reactions.js"></script>
+<script src="js/ptable.js"></script>
+<script src="js/decay.js"></script>
+<script src="js/knowledge.js"></script>
+<script src="js/learn/01-atom.js"></script>
+<script src="js/learn/02-config.js"></script>
+<script src="js/learn/03-periodic.js"></script>
+<script src="js/learn/04-bonding.js"></script>
+<script src="js/learn/05-vsepr.js"></script>
+<script src="js/learn/06-polarity.js"></script>
+<script src="js/learn/07-imf.js"></script>
+<script src="js/learn/08-reactions.js"></script>
+<script src="js/learn/09-mole.js"></script>
+<script src="js/learn/10-rate.js"></script>
+<script src="js/learn/11-acidbase.js"></script>
+<script src="js/learn/12-redox.js"></script>
+<script src="js/learn/13-organic.js"></script>
+<script src="js/learn/14-nuclear.js"></script>
+<script src="js/learn/15-safety.js"></script>
+<script src="js/learn/16-sources.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/tools/1-molar-mass.js"></script>
+<script src="js/tools/2-balance.js"></script>
+<script src="js/tools/3-ph.js"></script>
+<script src="js/tools/4-ideal-gas.js"></script>
+<script src="js/tools/5-dilution.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
